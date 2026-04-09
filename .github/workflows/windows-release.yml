@@ -1,0 +1,72 @@
+name: Build Windows Executable
+
+on:
+  workflow_dispatch:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Build with Maven
+        run: mvn clean package -DskipTests
+
+      - name: Build Windows exe with jpackage
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          # Copy jar to temp input dir
+          New-Item -ItemType Directory -Path "input" -Force | Out-Null
+          Copy-Item "target\oa-system-1.0.0.jar" "input\"
+          Copy-Item "oa.db" "input\" -ErrorAction SilentlyContinue
+
+          # Run jpackage to create app image (folder with exe + JRE)
+          jpackage `
+            --type app-image `
+            --input "input" `
+            --main-jar "oa-system-1.0.0.jar" `
+            --name "OA-System" `
+            --dest "output" `
+            --win-console `
+            --app-version "1.0.0" `
+            --vendor "OA Team" `
+            --description "OA System"
+
+          # Verify exe exists
+          if (Test-Path "output\OA-System\OA-System.exe") {
+            Write-Host "EXE created successfully"
+          } else {
+            Write-Host "EXE not found, listing output dir:"
+            Get-ChildItem "output" -Recurse
+          }
+
+      - name: Create zip distribution
+        run: |
+          Compress-Archive -Path "output\OA-System" -DestinationPath "OA-System-Windows.zip" -Force
+          New-Item -ItemType Directory -Path "dist" -Force | Out-Null
+          Move-Item "OA-System-Windows.zip" -Destination "dist\"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: oa-system-windows
+          path: dist/
+
+      - name: Upload to Release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
