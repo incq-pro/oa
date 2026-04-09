@@ -11,7 +11,7 @@ spring:
   application:
     name: OA System
   thymeleaf:
-    cache: false
+    cache: true
     prefix: classpath:/templates/
     suffix: .html
     mode: HTML

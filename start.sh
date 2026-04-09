@@ -8,6 +8,8 @@ PID_FILE="$APP_DIR/app.pid"
 
 # 默认初始化数据库
 INIT_DB="always"
+# 默认使用生产配置
+SPRING_PROFILES="prod"
 
 build() {
     cd "$APP_DIR"
@@ -38,7 +40,7 @@ start() {
         build
     fi
 
-    echo "启动应用..."
+    echo "启动应用 (profile: $SPRING_PROFILES)..."
     if [ "$INIT_DB" = "never" ]; then
         echo "数据库初始化: 跳过"
     else
@@ -46,7 +48,7 @@ start() {
     fi
 
     cd "$APP_DIR"
-    nohup java -Dspring.sql.init.mode="$INIT_DB" -jar "$JAR_FILE" > "$LOG_FILE" 2>&1 &
+    nohup java -Dspring.sql.init.mode="$INIT_DB" -Dspring.profiles.active="$SPRING_PROFILES" -jar "$JAR_FILE" > "$LOG_FILE" 2>&1 &
     PID=$!
     echo "$PID" > "$PID_FILE"
     echo "应用已启动 (PID: $PID)"
@@ -100,20 +102,25 @@ case "$1" in
         build
         ;;
     start)
-        if [ "$2" = "--no-init" ] || [ "$2" = "-n" ]; then
-            INIT_DB="never"
-        fi
+        for arg in "$@"; do
+            case "$arg" in
+                --no-init|-n) INIT_DB="never" ;;
+                --dev) SPRING_PROFILES="dev" ;;
+            esac
+        done
         start
         ;;
     stop)
         stop
         ;;
     restart)
-        if [ "$2" = "--no-init" ] || [ "$2" = "-n" ]; then
-            INIT_DB="never"
-        else
-            INIT_DB="always"
-        fi
+        SPRING_PROFILES="prod"
+        for arg in "$@"; do
+            case "$arg" in
+                --no-init|-n) INIT_DB="never" ;;
+                --dev) SPRING_PROFILES="dev" ;;
+            esac
+        done
         stop
         sleep 1
         start
@@ -126,13 +133,14 @@ case "$1" in
         echo ""
         echo "选项:"
         echo "  --no-init, -n    启动时不初始化数据库"
+        echo "  --dev            使用开发配置（禁用模板缓存）"
         echo ""
         echo "示例:"
         echo "  $0 build                      # 构建项目"
-        echo "  $0 start                     # 启动应用，初始化数据库"
-        echo "  $0 start --no-init            # 启动应用，跳过数据库初始化"
-        echo "  $0 start -n                  # 启动应用，跳过数据库初始化"
-        echo "  $0 restart --no-init         # 重启应用，跳过数据库初始化"
+        echo "  $0 start                     # 启动应用（生产配置）"
+        echo "  $0 start --dev               # 启动应用（开发配置）"
+        echo "  $0 start --dev --no-init     # 启动应用（开发配置，跳过数据库初始化）"
+        echo "  $0 restart --dev             # 重启应用（开发配置）"
         exit 1
         ;;
 esac
