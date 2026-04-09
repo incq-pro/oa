@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的申请</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style th:replace="fragment/detail_modal :: modal_styles"></style>
+</head>
+<body>
+    <div th:replace="fragment/sidebar :: sidebar"></div>
+    <div th:replace="fragment/common_styles :: styles"></div>
+
+    <div class="main-wrapper">
+        <header class="main-header">
+            <h2>我的申请</h2>
+            <div class="header-user">
+                <div class="user-avatar" th:text="${#strings.substring(session.loginUser?.realName, 0, 1)}">U</div>
+                <div>
+                    <div style="font-weight:500;font-size:14px;" th:text="${session.loginUser?.realName}">用户</div>
+                    <div style="font-size:12px;color:#6B7280;" th:text="${session.loginUser?.role == 'ADMIN' ? '管理员' : '普通用户'}">角色</div>
+                </div>
+            </div>
+        </header>
+        <main class="main-content">
+            <a th:href="@{/approval/add}" class="btn btn-primary animate-slide-right" style="margin-bottom:24px;">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                新建申请
+            </a>
+
+            <div class="card animate-in">
+                <div class="card-header">
+                    <h3>我的申请列表</h3>
+                </div>
+                <div class="card-body" style="padding:0;">
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>类型</th>
+                                    <th>标题</th>
+                                    <th>状态</th>
+                                    <th>申请时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="approval : ${approvals}" class="table-row">
+                                    <td th:text="${approval.id}">-</td>
+                                    <td th:text="${approval.typeName}">-</td>
+                                    <td th:text="${approval.title}">-</td>
+                                    <td>
+                                        <span class="badge badge-warning" th:if="${approval.status == 0}">待审批</span>
+                                        <span class="badge badge-success" th:if="${approval.status == 1}">已通过</span>
+                                        <span class="badge badge-danger" th:if="${approval.status == 2}">已拒绝</span>
+                                    </td>
+                                    <td th:text="${#dates.format(approval.createTime, 'yyyy-MM-dd HH:mm')}">-</td>
+                                    <td class="actions">
+                                        <button class="btn btn-sm btn-info" th:attr="onclick=|openApprovalDetail(${approval.id}, '${approval.typeName ?: ''}', '${approval.title ?: ''}', '${approval.reason ?: ''}', '${approval.amount ?: ''}', '', '', '${approval.status}', '${#dates.format(approval.createTime, 'yyyy-MM-dd HH:mm')}')|">查看</button>
+                                        <a th:href="@{/approval/edit/{id}(id=${approval.id})}" class="btn btn-sm btn-warning" th:if="${approval.status == 0}">编辑</a>
+                                        <a th:href="@{/approval/delete/{id}(id=${approval.id})}" class="btn btn-sm btn-danger" onclick="return confirm('确定删除?')" th:if="${approval.status == 0}">删除</a>
+                                        <span th:if="${approval.status != 0}" style="color:#9CA3AF;">-</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+<script th:replace="fragment/detail_modal :: modal_script"></script>
+<script>
+function openApprovalDetail(id, typeName, title, reason, amount, applicantName, assigneeName, status, createTime) {
+    var statusMap = {'0': '<span class="status-badge pending">待审核</span>', '1': '<span class="status-badge approved">已通过</span>', '2': '<span class="status-badge rejected">已驳回</span>'};
+    var content = `
+        <div class="info-grid">
+            <div class="info-item"><div class="info-label">申请类型</div><div class="info-value">${typeName || '-'}</div></div>
+            <div class="info-item"><div class="info-label">申请人</div><div class="info-value">${applicantName || '-'}</div></div>
+            <div class="info-item full-width"><div class="info-label">标题</div><div class="info-value highlight">${title || '-'}</div></div>
+            <div class="info-item full-width"><div class="info-label">申请原因</div><div class="info-value" style="white-space:pre-wrap;">${reason || '-'}</div></div>
+            <div class="info-item"><div class="info-label">金额</div><div class="info-value" style="color:#DC2626;">¥${amount || '0.00'}</div></div>
+            <div class="info-item"><div class="info-label">状态</div><div class="info-value">${statusMap[status] || status}</div></div>
+            <div class="info-item"><div class="info-label">申请时间</div><div class="info-value">${createTime || '-'}</div></div>
+        </div>
+    `;
+    openDetailModal('审批详情', content);
+}
+</script>
+<div th:replace="fragment/detail_modal :: detail_modal"></div>
+</body>
+</html>

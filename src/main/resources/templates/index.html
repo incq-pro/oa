@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>首页 - OA系统</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div th:replace="fragment/sidebar :: sidebar"></div>
+    <div th:replace="fragment/common_styles :: styles"></div>
+
+    <div class="main-wrapper">
+        <header class="main-header">
+            <h2>首页</h2>
+            <div class="header-user">
+                <div class="user-avatar" th:text="${#strings.substring(session.loginUser?.realName ?: '未登录', 0, 1)}">U</div>
+                <div>
+                    <div style="font-weight:500;font-size:14px;" th:text="${session.loginUser?.realName ?: '未登录'}">用户</div>
+                    <div style="font-size:12px;color:#6B7280;" th:text="${session.loginUser?.role == 'ADMIN' ? '管理员' : '普通用户'}">角色</div>
+                </div>
+            </div>
+        </header>
+        <main class="main-content">
+            <!-- Stats -->
+            <div class="stat-grid animate-in">
+                <div class="stat-card animate-pulse">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #DBEAFE 0%, #93C5FD 100%);">
+                        <svg width="24" height="24" fill="none" stroke="#2563EB" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    </div>
+                    <div class="stat-num" th:text="${userCount}">0</div>
+                    <div class="stat-label">用户总数</div>
+                </div>
+                <div class="stat-card animate-pulse">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #D1FAE5 0%, #6EE7B7 100%);">
+                        <svg width="24" height="24" fill="none" stroke="#059669" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    </div>
+                    <div class="stat-num" th:text="${#lists.size(notices)}">0</div>
+                    <div class="stat-label">通知公告</div>
+                </div>
+                <div class="stat-card animate-pulse">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #FEF3C7 0%, #FCD34D 100%);">
+                        <svg width="24" height="24" fill="none" stroke="#D97706" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                    </div>
+                    <div class="stat-num">-</div>
+                    <div class="stat-label">我的申请</div>
+                </div>
+                <div class="stat-card animate-pulse">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #FEE2E2 0%, #FCA5A5 100%);">
+                        <svg width="24" height="24" fill="none" stroke="#DC2626" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <div class="stat-num">-</div>
+                    <div class="stat-label">今日考勤</div>
+                </div>
+            </div>
+
+            <!-- Notices -->
+            <div class="card animate-in" style="animation-delay: 0.1s;">
+                <div class="card-header">
+                    <h3>通知公告</h3>
+                    <a th:href="@{/notice/list}" class="btn btn-sm btn-secondary">查看全部</a>
+                </div>
+                <div class="card-body" style="padding:0;">
+                    <div class="table-wrapper">
+                        <table th:if="${#lists.size(notices) > 0}">
+                            <thead>
+                                <tr>
+                                    <th>标题</th>
+                                    <th>作者</th>
+                                    <th>发布时间</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="notice : ${notices}" class="table-row">
+                                    <td th:text="${notice.title}">-</td>
+                                    <td th:text="${notice.authorName}">-</td>
+                                    <td th:text="${#dates.format(notice.createTime, 'yyyy-MM-dd HH:mm')}">-</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="empty-state" th:if="${#lists.size(notices) == 0}">
+                            <p>暂无公告</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.oa.mapper.SalesOrderMapper">
+    <select id="selectAll" resultType="SalesOrder">
+        SELECT o.*, c.name as customer_name, u.real_name as user_name
+        FROM sales_order o
+        LEFT JOIN customer c ON o.customer_id = c.id
+        LEFT JOIN sys_user u ON o.user_id = u.id
+        ORDER BY o.create_time DESC
+    </select>
+
+    <select id="selectList" resultType="SalesOrder">
+        SELECT o.*, c.name as customer_name, u.real_name as user_name
+        FROM sales_order o
+        LEFT JOIN customer c ON o.customer_id = c.id
+        LEFT JOIN sys_user u ON o.user_id = u.id
+        ORDER BY o.create_time DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="int">
+        SELECT COUNT(*) FROM sales_order
+    </select>
+
+    <select id="selectWithDetails" resultType="SalesOrder">
+        SELECT o.*, c.name as customer_name, u.real_name as user_name
+        FROM sales_order o
+        LEFT JOIN customer c ON o.customer_id = c.id
+        LEFT JOIN sys_user u ON o.user_id = u.id
+        ORDER BY o.create_time DESC
+    </select>
+
+    <select id="selectById" resultType="SalesOrder">
+        SELECT o.*, c.name as customer_name, u.real_name as user_name
+        FROM sales_order o
+        LEFT JOIN customer c ON o.customer_id = c.id
+        LEFT JOIN sys_user u ON o.user_id = u.id
+        WHERE o.id = #{id}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO sales_order (order_no, customer_id, user_id, total_amount, status)
+        VALUES (#{orderNo}, #{customerId}, #{userId}, #{totalAmount}, #{status})
+    </insert>
+
+    <update id="update">
+        UPDATE sales_order SET customer_id=#{customerId}, total_amount=#{totalAmount}, status=#{status}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM sales_order WHERE id = #{id}
+    </delete>
+</mapper>

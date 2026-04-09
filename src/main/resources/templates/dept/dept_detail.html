@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>部门详情</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div th:replace="fragment/sidebar :: sidebar"></div>
+    <div th:replace="fragment/common_styles :: styles"></div>
+
+    <div class="main-wrapper">
+        <header class="main-header">
+            <h2>部门管理</h2>
+            <div class="header-user">
+                <div class="user-avatar" th:text="${#strings.substring(session.loginUser?.realName, 0, 1)}">U</div>
+                <div>
+                    <div style="font-weight:500;font-size:14px;" th:text="${session.loginUser?.realName}">用户</div>
+                    <div style="font-size:12px;color:#6B7280;" th:text="${session.loginUser?.role == 'ADMIN' ? '管理员' : '普通用户'}">角色</div>
+                </div>
+            </div>
+        </header>
+        <main class="main-content">
+            <a th:href="@{/dept/list}" class="back-link">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                返回列表
+            </a>
+
+            <div class="card animate-in">
+                <div class="card-header">
+                    <h3>部门详情</h3>
+                </div>
+                <div class="card-body">
+                    <div style="display:flex;align-items:center;margin-bottom:32px;">
+                        <div class="stat-icon" style="width:80px;height:80px;font-size:32px;margin:0 auto;">
+                            <svg width="32" height="32" fill="none" stroke="#fff" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                        </div>
+                        <div style="margin-left:20px;">
+                            <div style="font-size:24px;font-weight:600;color:#1F2937;" th:text="${dept.name}">部门名称</div>
+                            <div style="font-size:14px;color:#6B7280;margin-top:4px;" th:text="${dept.parentId == 0 ? '顶级部门' : '子部门'}">部门类型</div>
+                        </div>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:24px;">
+                        <div class="info-item">
+                            <div class="info-label">部门名称</div>
+                            <div class="info-value" th:text="${dept.name}">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">上级部门</div>
+                            <div class="info-value" th:text="${dept.parentId == 0 ? '无' : dept.parentId}">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">创建时间</div>
+                            <div class="info-value" th:text="${#dates.format(dept.createTime, 'yyyy-MM-dd HH:mm')}">-</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:32px;">
+                        <a th:href="@{/dept/list}" class="btn btn-secondary">返回</a>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

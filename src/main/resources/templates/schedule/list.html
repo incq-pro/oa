@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>日程管理</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style th:replace="fragment/detail_modal :: modal_styles"></style>
+</head>
+<body>
+    <div th:replace="fragment/sidebar :: sidebar"></div>
+    <div th:replace="fragment/common_styles :: styles"></div>
+
+    <div class="main-wrapper">
+        <header class="main-header">
+            <h2>日程管理</h2>
+            <div class="header-user">
+                <div class="user-avatar" th:text="${#strings.substring(session.loginUser?.realName, 0, 1)}">U</div>
+                <div>
+                    <div style="font-weight:500;font-size:14px;" th:text="${session.loginUser?.realName}">用户</div>
+                    <div style="font-size:12px;color:#6B7280;" th:text="${session.loginUser?.role == 'ADMIN' ? '管理员' : '普通用户'}">角色</div>
+                </div>
+            </div>
+        </header>
+        <main class="main-content">
+            <a th:href="@{/schedule/add}" class="btn btn-primary animate-slide-right" style="margin-bottom:24px;">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                新增日程
+            </a>
+
+            <div class="card animate-in">
+                <div class="card-header">
+                    <h3>日程列表</h3>
+                </div>
+                <div class="card-body" style="padding:0;">
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>标题</th>
+                                    <th>内容</th>
+                                    <th>开始时间</th>
+                                    <th>结束时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="schedule : ${schedules}" class="table-row">
+                                    <td th:text="${schedule.id}">-</td>
+                                    <td th:text="${schedule.title}">-</td>
+                                    <td th:text="${schedule.content ?: '-'}">-</td>
+                                    <td th:text="${#dates.format(schedule.startTime, 'yyyy-MM-dd HH:mm')}">-</td>
+                                    <td th:text="${#dates.format(schedule.endTime, 'yyyy-MM-dd HH:mm')}">-</td>
+                                    <td class="actions">
+                                        <button class="btn btn-sm btn-info" th:attr="onclick=|openScheduleDetail(${schedule.id}, '${schedule.title}', '${schedule.content ?: ''}', '${#dates.format(schedule.startTime, 'yyyy-MM-dd HH:mm')}', '${#dates.format(schedule.endTime, 'yyyy-MM-dd HH:mm')}', '${schedule.location ?: ''}', '')|">查看</button>
+                                        <a th:href="@{/schedule/edit/{id}(id=${schedule.id})}" class="btn btn-sm btn-warning">编辑</a>
+                                        <a th:href="@{/schedule/delete/{id}(id=${schedule.id})}" class="btn btn-sm btn-danger" onclick="return confirm('确定删除?')">删除</a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+<script th:replace="fragment/detail_modal :: modal_script"></script>
+<script>
+function openScheduleDetail(id, title, content, startTime, endTime, location, creatorName) {
+    var content = `
+        <div class="info-grid">
+            <div class="info-item full-width"><div class="info-label">日程标题</div><div class="info-value highlight">${title}</div></div>
+            <div class="info-item full-width"><div class="info-label">日程内容</div><div class="info-value" style="white-space:pre-wrap;">${content || '-'}</div></div>
+            <div class="info-item"><div class="info-label">开始时间</div><div class="info-value">${startTime || '-'}</div></div>
+            <div class="info-item"><div class="info-label">结束时间</div><div class="info-value">${endTime || '-'}</div></div>
+            <div class="info-item"><div class="info-label">地点</div><div class="info-value">${location || '-'}</div></div>
+            <div class="info-item"><div class="info-label">创建人</div><div class="info-value">${creatorName || '-'}</div></div>
+        </div>
+    `;
+    openDetailModal('日程详情', content);
+}
+</script>
+<div th:replace="fragment/detail_modal :: detail_modal"></div>
+</body>
+</html>

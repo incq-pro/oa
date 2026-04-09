@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.oa.mapper.UserMapper">
+    <select id="selectAll" resultType="User">
+        SELECT u.*, d.name as dept_name
+        FROM sys_user u
+        LEFT JOIN department d ON u.dept_id = d.id
+        ORDER BY u.id
+    </select>
+
+    <select id="selectList" resultType="User">
+        SELECT u.*, d.name as dept_name
+        FROM sys_user u
+        LEFT JOIN department d ON u.dept_id = d.id
+        ORDER BY u.id
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="int">
+        SELECT COUNT(*) FROM sys_user
+    </select>
+
+    <select id="selectById" resultType="User">
+        SELECT u.*, d.name as dept_name
+        FROM sys_user u
+        LEFT JOIN department d ON u.dept_id = d.id
+        WHERE u.id = #{id}
+    </select>
+
+    <select id="selectByUsername" resultType="User">
+        SELECT u.*, d.name as dept_name
+        FROM sys_user u
+        LEFT JOIN department d ON u.dept_id = d.id
+        WHERE u.username = #{username}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO sys_user (username, password, real_name, email, phone, dept_id, position, role, status)
+        VALUES (#{username}, #{password}, #{realName}, #{email}, #{phone}, #{deptId}, #{position}, #{role}, #{status})
+    </insert>
+
+    <update id="update">
+        UPDATE sys_user
+        SET real_name = #{realName}, email = #{email}, phone = #{phone},
+            dept_id = #{deptId}, position = #{position}, role = #{role}, status = #{status}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM sys_user WHERE id = #{id}
+    </delete>
+</mapper>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>通知公告</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style th:replace="fragment/detail_modal :: modal_styles"></style>
+</head>
+<body>
+    <div th:replace="fragment/sidebar :: sidebar"></div>
+    <div th:replace="fragment/common_styles :: styles"></div>
+
+    <div class="main-wrapper">
+        <header class="main-header">
+            <h2>通知公告</h2>
+            <div class="header-user">
+                <div class="user-avatar" th:text="${#strings.substring(session.loginUser?.realName, 0, 1)}">U</div>
+                <div>
+                    <div style="font-weight:500;font-size:14px;" th:text="${session.loginUser?.realName}">用户</div>
+                    <div style="font-size:12px;color:#6B7280;" th:text="${session.loginUser?.role == 'ADMIN' ? '管理员' : '普通用户'}">角色</div>
+                </div>
+            </div>
+        </header>
+        <main class="main-content">
+            <a th:href="@{/notice/add}" class="btn btn-primary animate-slide-right" style="margin-bottom:24px;">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                发布公告
+            </a>
+
+            <div class="card animate-in">
+                <div class="card-header">
+                    <h3>公告列表</h3>
+                </div>
+                <div class="card-body" style="padding:0;">
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>标题</th>
+                                    <th>作者</th>
+                                    <th>发布时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="notice : ${notices}" class="table-row">
+                                    <td th:text="${notice.id}">-</td>
+                                    <td th:text="${notice.title}">-</td>
+                                    <td th:text="${notice.authorName}">-</td>
+                                    <td th:text="${#dates.format(notice.createTime, 'yyyy-MM-dd HH:mm')}">-</td>
+                                    <td class="actions">
+                                        <a th:href="@{/notice/detail/{id}(id=${notice.id})}" class="btn btn-sm btn-info">查看</a>
+                                        <a th:href="@{/notice/edit/{id}(id=${notice.id})}" class="btn btn-sm btn-warning">编辑</a>
+                                        <a th:href="@{/notice/delete/{id}(id=${notice.id})}" class="btn btn-sm btn-danger" onclick="return confirm('确定删除?')">删除</a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination-wrapper" th:if="${totalCount > pageSize}">
+                        <div class="pagination-info">共 <span th:text="${totalCount}">0</span> 条记录，第 <span th:text="${currentPage}">1</span>/<span th:text="${(totalCount + pageSize - 1) / pageSize}">1</span> 页</div>
+                        <div class="pagination">
+                            <a th:if="${currentPage > 1}" th:href="@{/notice/list(page=${currentPage - 1}, size=${pageSize})}" class="page-btn">上一页</a>
+                            <span th:if="${currentPage <= 1}" class="page-btn disabled">上一页</span>
+                            <a th:if="${currentPage < (totalCount + pageSize - 1) / pageSize}" th:href="@{/notice/list(page=${currentPage + 1}, size=${pageSize})}" class="page-btn">下一页</a>
+                            <span th:if="${currentPage >= (totalCount + pageSize - 1) / pageSize}" class="page-btn disabled">下一页</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+<script th:replace="fragment/detail_modal :: modal_script"></script>
+<script>
+function openNoticeDetail(id, title, content, authorName, createTime, type) {
+    var typeMap = {'1': '<span class="status-badge">公司通知</span>', '2': '<span class="status-badge pending">部门通知</span>'};
+    var contentHtml = content ? content.replace(/\n/g, '<br>') : '-';
+    var content = `
+        <div class="info-grid">
+            <div class="info-item full-width"><div class="info-label">标题</div><div class="info-value highlight">${title}</div></div>
+            <div class="info-item"><div class="info-label">类型</div><div class="info-value">${typeMap[type] || type}</div></div>
+            <div class="info-item"><div class="info-label">发布人</div><div class="info-value">${authorName || '-'}</div></div>
+            <div class="info-item"><div class="info-label">发布时间</div><div class="info-value">${createTime || '-'}</div></div>
+            <div class="info-item full-width"><div class="info-label">内容</div><div class="info-value" style="white-space: pre-wrap; line-height: 1.8;">${contentHtml}</div></div>
+        </div>
+    `;
+    openDetailModal('通知详情', content);
+}
+</script>
+<div th:replace="fragment/detail_modal :: detail_modal"></div>
+</body>
+</html>

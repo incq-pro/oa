@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>公告详情</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div th:replace="fragment/sidebar :: sidebar"></div>
+    <div th:replace="fragment/common_styles :: styles"></div>
+
+    <div class="main-wrapper">
+        <header class="main-header">
+            <h2>通知公告</h2>
+            <div class="header-user">
+                <div class="user-avatar" th:text="${#strings.substring(session.loginUser?.realName, 0, 1)}">U</div>
+                <div>
+                    <div style="font-weight:500;font-size:14px;" th:text="${session.loginUser?.realName}">用户</div>
+                    <div style="font-size:12px;color:#6B7280;" th:text="${session.loginUser?.role == 'ADMIN' ? '管理员' : '普通用户'}">角色</div>
+                </div>
+            </div>
+        </header>
+        <main class="main-content">
+            <a th:href="@{/notice/list}" class="back-link">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                返回列表
+            </a>
+
+            <div class="card animate-in">
+                <div class="card-header">
+                    <h3 th:text="${notice.title}">公告标题</h3>
+                </div>
+                <div class="card-body">
+                    <div style="display:flex;gap:24px;margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid #E5E7EB;">
+                        <div style="display:flex;align-items:center;">
+                            <svg width="16" height="16" fill="none" stroke="#6B7280" viewBox="0 0 24 24" style="margin-right:8px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                            <span style="color:#6B7280;font-size:14px;" th:text="${notice.authorName ?: '未知'}">作者</span>
+                        </div>
+                        <div style="display:flex;align-items:center;">
+                            <svg width="16" height="16" fill="none" stroke="#6B7280" viewBox="0 0 24 24" style="margin-right:8px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <span style="color:#6B7280;font-size:14px;" th:text="${#dates.format(notice.createTime, 'yyyy-MM-dd HH:mm')}">发布时间</span>
+                        </div>
+                    </div>
+
+                    <div style="line-height:1.8;font-size:15px;color:#374151;white-space:pre-wrap;" th:text="${notice.content}">公告内容</div>
+
+                    <div style="margin-top:32px;">
+                        <a th:href="@{/notice/list}" class="btn btn-secondary">返回</a>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

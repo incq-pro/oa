@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.oa.mapper.VoucherMapper">
+    <select id="selectList" resultType="VoucherSummary">
+        SELECT v.id, v.voucher_no as voucherNo, v.voucher_date as voucherDate,
+               v.attachment_count as attachmentCount, u.real_name as makerName,
+               v.audit_status as auditStatus,
+               CASE v.audit_status
+                   WHEN 0 THEN '待审核'
+                   WHEN 1 THEN '已审核'
+                   WHEN 2 THEN '驳回'
+               END as auditStatusName,
+               v.posting_status as postingStatus,
+               CASE v.posting_status
+                   WHEN 0 THEN '未过账'
+                   WHEN 1 THEN '已过账'
+               END as postingStatusName,
+               v.total_amount as totalAmount,
+               v.remark,
+               (SELECT COUNT(*) FROM voucher_item WHERE voucher_id = v.id) as itemCount,
+               v.create_time as createTime
+        FROM voucher v
+        LEFT JOIN sys_user u ON v.maker_id = u.id
+        WHERE 1=1
+        <if test="voucherNo != null and voucherNo != ''">
+            AND v.voucher_no LIKE '%' || #{voucherNo} || '%'
+        </if>
+        <if test="startDate != null and startDate != ''">
+            AND v.voucher_date &gt;= #{startDate}
+        </if>
+        <if test="endDate != null and endDate != ''">
+            AND v.voucher_date &lt;= #{endDate}
+        </if>
+        <if test="auditStatus != null">
+            AND v.audit_status = #{auditStatus}
+        </if>
+        <if test="postingStatus != null">
+            AND v.posting_status = #{postingStatus}
+        </if>
+        ORDER BY v.voucher_date DESC, v.voucher_no DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countList" resultType="int">
+        SELECT COUNT(*) FROM voucher v
+        WHERE 1=1
+        <if test="voucherNo != null and voucherNo != ''">
+            AND v.voucher_no LIKE '%' || #{voucherNo} || '%'
+        </if>
+        <if test="startDate != null and startDate != ''">
+            AND v.voucher_date &gt;= #{startDate}
+        </if>
+        <if test="endDate != null and endDate != ''">
+            AND v.voucher_date &lt;= #{endDate}
+        </if>
+        <if test="auditStatus != null">
+            AND v.audit_status = #{auditStatus}
+        </if>
+        <if test="postingStatus != null">
+            AND v.posting_status = #{postingStatus}
+        </if>
+    </select>
+
+    <select id="selectById" resultType="Voucher">
+        SELECT v.*, u.real_name as makerName,
+               c.real_name as checkerName,
+               p.real_name as posterName,
+               CASE v.audit_status
+                   WHEN 0 THEN '待审核'
+                   WHEN 1 THEN '已审核'
+                   WHEN 2 THEN '驳回'
+               END as auditStatusName,
+               CASE v.posting_status
+                   WHEN 0 THEN '未过账'
+                   WHEN 1 THEN '已过账'
+               END as postingStatusName
+        FROM voucher v
+        LEFT JOIN sys_user u ON v.maker_id = u.id
+        LEFT JOIN sys_user c ON v.checker_id = c.id
+        LEFT JOIN sys_user p ON v.poster_id = p.id
+        WHERE v.id = #{id}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO voucher (voucher_no, voucher_date, attachment_count, maker_id, checker_id, poster_id,
+                            audit_status, posting_status, total_amount, remark, create_time)
+        VALUES (#{voucherNo}, #{voucherDate}, #{attachmentCount}, #{makerId}, #{checkerId}, #{posterId},
+                #{auditStatus}, #{postingStatus}, #{totalAmount}, #{remark}, CURRENT_TIMESTAMP)
+    </insert>
+
+    <update id="update">
+        UPDATE voucher
+        SET voucher_date = #{voucherDate}, attachment_count = #{attachmentCount},
+            checker_id = #{checkerId}, poster_id = #{posterId},
+            audit_status = #{auditStatus}, posting_status = #{postingStatus},
+            total_amount = #{totalAmount}, remark = #{remark},
+            update_time = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM voucher WHERE id = #{id}
+    </delete>
+
+    <select id="countTodayVouchers" resultType="int">
+        SELECT COUNT(*) FROM voucher WHERE voucher_no LIKE 'V' || #{dateStr} || '%'
+    </select>
+
+    <select id="selectSubjectSummary" resultType="SubjectSummary">
+        SELECT s.id as subjectId, s.subject_code as subjectCode, s.subject_name as subjectName,
+               s.balance_direction as balanceDirection,
+               COALESCE(SUM(CASE WHEN vi.direction = '1' THEN vi.amount ELSE 0 END), 0) as debitAmount,
+               COALESCE(SUM(CASE WHEN vi.direction = '2' THEN vi.amount ELSE 0 END), 0) as creditAmount,
+               COUNT(DISTINCT v.id) as voucherCount
+        FROM account_subject s
+        LEFT JOIN voucher_item vi ON s.id = vi.subject_id
+        LEFT JOIN voucher v ON vi.voucher_id = v.id AND v.voucher_date BETWEEN #{startDate} AND #{endDate} AND v.posting_status = 1
+        WHERE s.status = 1
+        GROUP BY s.id, s.subject_code, s.subject_name, s.balance_direction
+        ORDER BY s.subject_code
+    </select>
+</mapper>

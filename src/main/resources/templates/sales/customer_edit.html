@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>客户编辑</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div th:replace="fragment/sidebar :: sidebar"></div>
+    <div th:replace="fragment/common_styles :: styles"></div>
+
+    <div class="main-wrapper">
+        <header class="main-header">
+            <h2>客户管理</h2>
+            <div class="header-user">
+                <div class="user-avatar" th:text="${#strings.substring(session.loginUser?.realName, 0, 1)}">U</div>
+            </div>
+        </header>
+        <main class="main-content">
+            <a th:href="@{/customer/list}" class="back-link">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                返回列表
+            </a>
+
+            <div class="card animate-in">
+                <div class="card-header">
+                    <h3 th:text="${customer.id == null ? '新增客户' : '编辑客户'}">客户编辑</h3>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/customer/save}" method="post">
+                        <input type="hidden" name="id" th:value="${customer.id}">
+                        <div style="max-width:500px;">
+                            <div class="form-group">
+                                <label class="form-label">客户名称</label>
+                                <input type="text" name="name" class="form-control" th:value="${customer.name}" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">联系人</label>
+                                <input type="text" name="contact" class="form-control" th:value="${customer.contact}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">电话</label>
+                                <input type="text" name="phone" class="form-control" th:value="${customer.phone}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">地址</label>
+                                <input type="text" name="address" class="form-control" th:value="${customer.address}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">状态</label>
+                                <select name="status" class="form-control">
+                                    <option value="1" th:selected="${customer.status == 1 || customer.status == null}">正常</option>
+                                    <option value="0" th:selected="${customer.status == 0}">禁用</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="margin-top:24px;display:flex;gap:12px;">
+                            <button type="submit" class="btn btn-primary">保存</button>
+                            <a th:href="@{/customer/list}" class="btn btn-secondary">取消</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

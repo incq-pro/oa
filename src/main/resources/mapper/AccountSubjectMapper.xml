@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.oa.mapper.AccountSubjectMapper">
+    <select id="selectAll" resultType="AccountSubject">
+        SELECT * FROM account_subject WHERE status = 1 ORDER BY subject_code
+    </select>
+
+    <select id="selectTree" resultType="AccountSubject">
+        SELECT * FROM account_subject WHERE status = 1 ORDER BY subject_code
+    </select>
+
+    <select id="selectById" resultType="AccountSubject">
+        SELECT * FROM account_subject WHERE id = #{id}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO account_subject (subject_code, subject_name, parent_id, balance_direction, level, is_leaf, status)
+        VALUES (#{subjectCode}, #{subjectName}, #{parentId}, #{balanceDirection}, #{level}, #{isLeaf}, #{status})
+    </insert>
+
+    <update id="update">
+        UPDATE account_subject
+        SET subject_name = #{subjectName}, balance_direction = #{balanceDirection}, status = #{status}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM account_subject WHERE id = #{id}
+    </delete>
+</mapper>

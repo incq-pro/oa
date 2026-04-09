@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>客户管理</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style th:replace="fragment/detail_modal :: modal_styles"></style>
+</head>
+<body>
+    <div th:replace="fragment/sidebar :: sidebar"></div>
+    <div th:replace="fragment/common_styles :: styles"></div>
+
+    <div class="main-wrapper">
+        <header class="main-header">
+            <h2>客户管理</h2>
+            <div class="header-user">
+                <div class="user-avatar" th:text="${#strings.substring(session.loginUser?.realName, 0, 1)}">U</div>
+                <div>
+                    <div style="font-weight:500;font-size:14px;" th:text="${session.loginUser?.realName}">用户</div>
+                    <div style="font-size:12px;color:#6B7280;" th:text="${session.loginUser?.role == 'ADMIN' ? '管理员' : '普通用户'}">角色</div>
+                </div>
+            </div>
+        </header>
+        <main class="main-content">
+            <a th:href="@{/customer/add}" class="btn btn-primary animate-slide-right" style="margin-bottom:24px;">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                新增客户
+            </a>
+
+            <div class="card animate-in">
+                <div class="card-header">
+                    <h3>客户列表</h3>
+                </div>
+                <div class="card-body" style="padding:0;">
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>客户名称</th>
+                                    <th>联系人</th>
+                                    <th>电话</th>
+                                    <th>地址</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="c : ${customers}" class="table-row">
+                                    <td th:text="${c.id}">-</td>
+                                    <td th:text="${c.name}">-</td>
+                                    <td th:text="${c.contact}">-</td>
+                                    <td th:text="${c.phone}">-</td>
+                                    <td th:text="${c.address}">-</td>
+                                    <td><span class="badge badge-success" th:text="${c.status == 1 ? '正常' : '禁用'}">-</span></td>
+                                    <td class="actions">
+                                        <button class="btn btn-sm btn-info" th:attr="onclick=|openCustomerDetail(${c.id}, '${c.name}', '${c.contact ?: ''}', '${c.phone ?: ''}', '${c.email ?: ''}', '${c.address ?: ''}', '${c.industry ?: ''}', '${c.level}')|">查看</button>
+                                        <a th:href="@{/customer/edit/{id}(id=${c.id})}" class="btn btn-sm btn-warning">编辑</a>
+                                        <a th:href="@{/customer/delete/{id}(id=${c.id})}" class="btn btn-sm btn-danger" onclick="return confirm('确定删除?')">删除</a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+<script th:replace="fragment/detail_modal :: modal_script"></script>
+<script>
+function openCustomerDetail(id, name, contact, phone, email, address, industry, level) {
+    var levelMap = {'1': '<span class="status-badge approved">VIP</span>', '2': '<span class="status-badge">普通</span>', '3': '<span class="status-badge pending">潜在</span>'};
+    var content = `
+        <div class="info-grid">
+            <div class="info-item full-width"><div class="info-label">客户名称</div><div class="info-value highlight">${name}</div></div>
+            <div class="info-item"><div class="info-label">联系人</div><div class="info-value">${contact || '-'}</div></div>
+            <div class="info-item"><div class="info-label">电话</div><div class="info-value">${phone || '-'}</div></div>
+            <div class="info-item"><div class="info-label">邮箱</div><div class="info-value">${email || '-'}</div></div>
+            <div class="info-item"><div class="info-label">行业</div><div class="info-value">${industry || '-'}</div></div>
+            <div class="info-item"><div class="info-label">客户等级</div><div class="info-value">${levelMap[level] || level}</div></div>
+            <div class="info-item full-width"><div class="info-label">地址</div><div class="info-value">${address || '-'}</div></div>
+        </div>
+    `;
+    openDetailModal('客户详情', content);
+}
+</script>
+<div th:replace="fragment/detail_modal :: detail_modal"></div>
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>产品管理</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style th:replace="fragment/detail_modal :: modal_styles"></style>
+</head>
+<body>
+    <div th:replace="fragment/sidebar :: sidebar"></div>
+    <div th:replace="fragment/common_styles :: styles"></div>
+
+    <div class="main-wrapper">
+        <header class="main-header">
+            <h2>产品管理</h2>
+            <div class="header-user">
+                <div class="user-avatar" th:text="${#strings.substring(session.loginUser?.realName, 0, 1)}">U</div>
+                <div>
+                    <div style="font-weight:500;font-size:14px;" th:text="${session.loginUser?.realName}">用户</div>
+                </div>
+            </div>
+        </header>
+        <main class="main-content">
+            <a th:href="@{/product/add}" class="btn btn-primary animate-slide-right" style="margin-bottom:24px;">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                新增产品
+            </a>
+
+            <div class="card animate-in">
+                <div class="card-header">
+                    <h3>产品列表</h3>
+                </div>
+                <div class="card-body" style="padding:0;">
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>产品编码</th>
+                                    <th>产品名称</th>
+                                    <th>单价</th>
+                                    <th>库存</th>
+                                    <th>单位</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="p : ${products}" class="table-row">
+                                    <td th:text="${p.id}">-</td>
+                                    <td th:text="${p.code}">-</td>
+                                    <td th:text="${p.name}">-</td>
+                                    <td th:text="${'¥' + p.price}">-</td>
+                                    <td th:text="${p.stock}">-</td>
+                                    <td th:text="${p.unit}">-</td>
+                                    <td><span class="badge badge-success" th:text="${p.status == 1 ? '正常' : '禁用'}">-</span></td>
+                                    <td class="actions">
+                                        <button class="btn btn-sm btn-info" th:attr="onclick=|openProductDetail(${p.id}, '${p.name}', '${p.code ?: ''}', '${p.category ?: ''}', '${p.unit ?: ''}', '${p.price}', '${p.description ?: ''}')|">查看</button>
+                                        <a th:href="@{/product/edit/{id}(id=${p.id})}" class="btn btn-sm btn-warning">编辑</a>
+                                        <a th:href="@{/product/delete/{id}(id=${p.id})}" class="btn btn-sm btn-danger" onclick="return confirm('确定删除?')">删除</a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+<script th:replace="fragment/detail_modal :: modal_script"></script>
+<script>
+function openProductDetail(id, name, code, category, unit, price, description) {
+    var content = `
+        <div class="info-grid">
+            <div class="info-item full-width"><div class="info-label">产品名称</div><div class="info-value highlight">${name}</div></div>
+            <div class="info-item"><div class="info-label">产品编码</div><div class="info-value">${code || '-'}</div></div>
+            <div class="info-item"><div class="info-label">分类</div><div class="info-value">${category || '-'}</div></div>
+            <div class="info-item"><div class="info-label">单位</div><div class="info-value">${unit || '-'}</div></div>
+            <div class="info-item"><div class="info-label">单价</div><div class="info-value" style="color:#059669; font-size:18px;">¥${price || '0.00'}</div></div>
+            <div class="info-item full-width"><div class="info-label">描述</div><div class="info-value">${description || '-'}</div></div>
+        </div>
+    `;
+    openDetailModal('产品详情', content);
+}
+</script>
+<div th:replace="fragment/detail_modal :: detail_modal"></div>
+</body>
+</html>

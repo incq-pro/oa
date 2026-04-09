@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户管理</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style th:replace="fragment/detail_modal :: modal_styles"></style>
+</head>
+<body>
+    <div th:replace="fragment/sidebar :: sidebar"></div>
+    <div th:replace="fragment/common_styles :: styles"></div>
+
+    <div class="main-wrapper">
+        <header class="main-header">
+            <h2>用户管理</h2>
+            <div class="header-user">
+                <div class="user-avatar" th:text="${#strings.substring(session.loginUser?.realName, 0, 1)}">U</div>
+                <div>
+                    <div style="font-weight:500;font-size:14px;" th:text="${session.loginUser?.realName}">用户</div>
+                    <div style="font-size:12px;color:#6B7280;" th:text="${session.loginUser?.role == 'ADMIN' ? '管理员' : '普通用户'}">角色</div>
+                </div>
+            </div>
+        </header>
+        <main class="main-content">
+            <a th:href="@{/user/add}" class="btn btn-primary animate-slide-right" style="margin-bottom:24px;">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                新增用户
+            </a>
+
+            <div class="card animate-in">
+                <div class="card-header">
+                    <h3>用户列表</h3>
+                </div>
+                <div class="card-body" style="padding:0;">
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>用户名</th>
+                                    <th>姓名</th>
+                                    <th>部门</th>
+                                    <th>职位</th>
+                                    <th>角色</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="user : ${users}" class="table-row">
+                                    <td th:text="${user.id}">-</td>
+                                    <td th:text="${user.username}">-</td>
+                                    <td th:text="${user.realName}">-</td>
+                                    <td th:text="${user.deptName ?: '-'}">-</td>
+                                    <td th:text="${user.position ?: '-'}">-</td>
+                                    <td><span class="badge" th:classappend="${user.role == 'ADMIN' ? 'badge-info' : 'badge-success'}" th:text="${user.role == 'ADMIN' ? '管理员' : '普通用户'}">-</span></td>
+                                    <td><span class="badge badge-success" th:text="${user.status == 1 ? '正常' : '禁用'}">-</span></td>
+                                    <td class="actions">
+                                        <button class="btn btn-sm btn-info" th:attr="onclick=|openUserDetail(${user.id}, '${user.username}', '${user.realName}', '${user.email}', '${user.phone}', '${user.deptName ?: ''}', '${user.position ?: ''}', '${user.role}', '${user.status}')|">查看</button>
+                                        <a th:href="@{/user/edit/{id}(id=${user.id})}" class="btn btn-sm btn-warning">编辑</a>
+                                        <a th:href="@{/user/delete/{id}(id=${user.id})}" class="btn btn-sm btn-danger" onclick="return confirm('确定删除?')">删除</a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination-wrapper" th:if="${totalCount > pageSize}">
+                        <div class="pagination-info">共 <span th:text="${totalCount}">0</span> 条记录，第 <span th:text="${currentPage}">1</span>/<span th:text="${(totalCount + pageSize - 1) / pageSize}">1</span> 页</div>
+                        <div class="pagination">
+                            <a th:if="${currentPage > 1}" th:href="@{/user/list(page=${currentPage - 1}, size=${pageSize})}" class="page-btn">上一页</a>
+                            <span th:if="${currentPage <= 1}" class="page-btn disabled">上一页</span>
+                            <a th:if="${currentPage < (totalCount + pageSize - 1) / pageSize}" th:href="@{/user/list(page=${currentPage + 1}, size=${pageSize})}" class="page-btn">下一页</a>
+                            <span th:if="${currentPage >= (totalCount + pageSize - 1) / pageSize}" class="page-btn disabled">下一页</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+<script th:replace="fragment/detail_modal :: modal_script"></script>
+<script>
+function openUserDetail(id, username, realName, email, phone, deptName, position, role, status) {
+    var statusMap = {'1': '<span class="status-badge approved">正常</span>', '0': '<span class="status-badge rejected">禁用</span>'};
+    var roleMap = {'ADMIN': '<span class="status-badge pending">管理员</span>', 'USER': '<span class="status-badge">普通用户</span>'};
+    var content = `
+        <div class="info-grid">
+            <div class="info-item"><div class="info-label">用户名</div><div class="info-value">${username}</div></div>
+            <div class="info-item"><div class="info-label">真实姓名</div><div class="info-value">${realName}</div></div>
+            <div class="info-item"><div class="info-label">邮箱</div><div class="info-value">${email || '-'}</div></div>
+            <div class="info-item"><div class="info-label">电话</div><div class="info-value">${phone || '-'}</div></div>
+            <div class="info-item"><div class="info-label">部门</div><div class="info-value">${deptName || '-'}</div></div>
+            <div class="info-item"><div class="info-label">职位</div><div class="info-value">${position || '-'}</div></div>
+            <div class="info-item"><div class="info-label">角色</div><div class="info-value">${roleMap[role] || role}</div></div>
+            <div class="info-item"><div class="info-label">状态</div><div class="info-value">${statusMap[status] || status}</div></div>
+        </div>
+    `;
+    openDetailModal('用户详情', content);
+}
+</script>
+<div th:replace="fragment/detail_modal :: detail_modal"></div>
+</body>
+</html>

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>凭证录入</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .voucher-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        .voucher-table th, .voucher-table td { border: 1px solid #E5E7EB; padding: 12px; text-align: left; }
+        .voucher-table th { background: #F9FAFB; font-weight: 600; font-size: 13px; color: #6B7280; }
+        .voucher-table td { vertical-align: top; }
+        .voucher-table select, .voucher-table input { width: 100%; padding: 10px 12px; border: 1px solid #D1D5DB; border-radius: 8px; font-size: 14px; }
+        .voucher-table select:focus, .voucher-table input:focus { outline: none; border-color: #4F46E5; box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
+        .row-delete { color: #EF4444; cursor: pointer; padding: 8px; }
+        .row-delete:hover { color: #DC2626; }
+        .balance-info { display: flex; gap: 40px; padding: 16px 20px; background: #F9FAFB; border-radius: 12px; margin: 20px 0; }
+        .balance-info .label { font-size: 14px; color: #6B7280; }
+        .balance-info .value { font-size: 18px; font-weight: 600; }
+        .balance-info .debit { color: #059669; }
+        .balance-info .credit { color: #DC2626; }
+        .balance-info .balanced { color: #059669; font-size: 14px; }
+        .balance-info .unbalanced { color: #DC2626; font-size: 14px; }
+        .add-row-btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; background: #F3F4F6; border: 1px dashed #D1D5DB; border-radius: 8px; color: #6B7280; font-size: 14px; cursor: pointer; transition: all 0.2s; }
+        .add-row-btn:hover { background: #E5E7EB; color: #4F46E5; border-color: #4F46E5; }
+        .info-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 24px; }
+        @media (max-width: 768px) { .info-grid { grid-template-columns: 1fr 1fr; } }
+    </style>
+</head>
+<body>
+    <div th:replace="fragment/sidebar :: sidebar"></div>
+    <div th:replace="fragment/common_styles :: styles"></div>
+
+    <div class="main-wrapper">
+        <header class="main-header">
+            <h2>凭证录入</h2>
+            <div class="header-user">
+                <div class="user-avatar" th:text="${#strings.substring(session.loginUser?.realName ?: '未登录', 0, 1)}">U</div>
+                <div>
+                    <div style="font-weight:500;font-size:14px;" th:text="${session.loginUser?.realName ?: '未登录'}">用户</div>
+                    <div style="font-size:12px;color:#6B7280;" th:text="${session.loginUser?.role == 'ADMIN' ? '管理员' : '普通用户'}">角色</div>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <a th:href="@{/voucher/list}" class="back-link">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                返回列表
+            </a>
+
+            <div class="card animate-in">
+                <div class="card-header">
+                    <h3 th:text="${voucher.id == null ? '新增凭证' : '查看凭证'}">凭证录入</h3>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/voucher/save}" method="post" id="voucherForm">
+                        <input type="hidden" name="id" th:value="${voucher.id}">
+
+                        <div class="info-grid">
+                            <div class="form-group">
+                                <label class="form-label">凭证日期</label>
+                                <input type="date" name="voucherDate" class="form-control" required
+                                       th:value="${voucher.voucherDate}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">附件张数</label>
+                                <input type="number" name="attachmentCount" class="form-control" min="0" value="0"
+                                       th:value="${voucher.attachmentCount ?: 0}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">制单人</label>
+                                <input type="text" class="form-control" readonly th:value="${session.loginUser?.realName ?: '系统管理员'}">
+                            </div>
+                            <div class="form-group" th:if="${voucher.id != null}">
+                                <label class="form-label">凭证号</label>
+                                <input type="text" class="form-control" readonly th:value="${voucher.voucherNo}">
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom:12px;font-weight:600;color:#374151;font-size:14px;">凭证明细</div>
+                        <table class="voucher-table" id="voucherTable">
+                            <thead>
+                                <tr>
+                                    <th style="width:50px;">#</th>
+                                    <th>科目</th>
+                                    <th style="width:100px;">借贷方向</th>
+                                    <th style="width:150px;">金额(元)</th>
+                                    <th>摘要</th>
+                                    <th style="width:50px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="itemsBody">
+                                <tr th:if="${voucher.items != null and voucher.items.size() > 0}"
+                                    th:each="item, stat : ${voucher.items}">
+                                    <td th:text="${stat.index + 1}">1</td>
+                                    <td>
+                                        <select name="subjectId" required>
+                                            <option value="">请选择科目</option>
+                                            <option th:each="s : ${subjects}" th:value="${s.id}"
+                                                    th:selected="${s.id == item.subjectId}"
+                                                    th:text="${s.subjectCode} + ' - ' + ${s.subjectName}">-</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select name="direction" required>
+                                            <option value="1" th:selected="${item.direction == '1'}">借</option>
+                                            <option value="2" th:selected="${item.direction == '2'}">贷</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="number" name="amount" step="0.01" min="0" required
+                                               class="form-control" th:value="${item.amount}">
+                                    </td>
+                                    <td>
+                                        <input type="text" name="summary" class="form-control" th:value="${item.summary}">
+                                    </td>
+                                    <td>
+                                        <span class="row-delete" onclick="deleteRow(this)">
+                                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr th:unless="${voucher.items != null and voucher.items.size() > 0}">
+                                    <td>1</td>
+                                    <td>
+                                        <select name="subjectId" required>
+                                            <option value="">请选择科目</option>
+                                            <option th:each="s : ${subjects}" th:value="${s.id}"
+                                                    th:text="${s.subjectCode} + ' - ' + ${s.subjectName}">-</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select name="direction" required>
+                                            <option value="1">借</option>
+                                            <option value="2">贷</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="number" name="amount" step="0.01" min="0" required class="form-control">
+                                    </td>
+                                    <td>
+                                        <input type="text" name="summary" class="form-control">
+                                    </td>
+                                    <td>
+                                        <span class="row-delete" onclick="deleteRow(this)">
+                                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="add-row-btn" onclick="addRow()">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            添加分录
+                        </div>
+
+                        <div class="balance-info">
+                            <div>
+                                <div class="label">借方合计</div>
+                                <div class="value debit" id="debitTotal">¥0.00</div>
+                            </div>
+                            <div>
+                                <div class="label">贷方合计</div>
+                                <div class="value credit" id="creditTotal">¥0.00</div>
+                            </div>
+                            <div id="balanceStatus">
+                                <div class="label">状态</div>
+                                <div class="unbalanced">借贷不平衡</div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">备注</label>
+                            <textarea name="remark" class="form-control" rows="3" th:text="${voucher.remark}"></textarea>
+                        </div>
+
+                        <div style="display:flex;gap:12px;margin-top:24px;">
+                            <button type="submit" class="btn btn-primary" onclick="return validateForm()">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                保存凭证
+                            </button>
+                            <a th:href="@{/voucher/list}" class="btn btn-secondary">取消</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script th:inline="javascript">
+        var subjects = [[${subjects}]];
+
+        function addRow() {
+            var table = document.getElementById('voucherTable').getElementsByTagName('tbody')[0];
+            var rowCount = table.rows.length;
+            var newRow = table.insertRow(rowCount);
+            newRow.innerHTML = `
+                <td>${rowCount + 1}</td>
+                <td>
+                    <select name="subjectId" required>
+                        <option value="">请选择科目</option>
+                        ${subjects.map(s => `<option value="${s.id}">${s.subjectCode} - ${s.subjectName}</option>`).join('')}
+                    </select>
+                </td>
+                <td>
+                    <select name="direction" required onchange="calculateBalance()">
+                        <option value="1">借</option>
+                        <option value="2">贷</option>
+                    </select>
+                </td>
+                <td>
+                    <input type="number" name="amount" step="0.01" min="0" required class="form-control" oninput="calculateBalance()">
+                </td>
+                <td>
+                    <input type="text" name="summary" class="form-control">
+                </td>
+                <td>
+                    <span class="row-delete" onclick="deleteRow(this)">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </span>
+                </td>
+            `;
+            renumberRows();
+        }
+
+        function deleteRow(btn) {
+            var row = btn.closest('tr');
+            var tbody = document.getElementById('itemsBody');
+            if (tbody.rows.length > 1) {
+                row.remove();
+                renumberRows();
+                calculateBalance();
+            }
+        }
+
+        function renumberRows() {
+            var rows = document.getElementById('itemsBody').rows;
+            for (var i = 0; i < rows.length; i++) {
+                rows[i].cells[0].textContent = i + 1;
+            }
+        }
+
+        function calculateBalance() {
+            var debitTotal = 0;
+            var creditTotal = 0;
+            var rows = document.getElementById('itemsBody').rows;
+
+            for (var i = 0; i < rows.length; i++) {
+                var direction = rows[i].cells[2].querySelector('select').value;
+                var amount = parseFloat(rows[i].cells[3].querySelector('input').value) || 0;
+
+                if (direction === '1') {
+                    debitTotal += amount;
+                } else {
+                    creditTotal += amount;
+                }
+            }
+
+            document.getElementById('debitTotal').textContent = '¥' + debitTotal.toFixed(2);
+            document.getElementById('creditTotal').textContent = '¥' + creditTotal.toFixed(2);
+
+            var statusDiv = document.getElementById('balanceStatus');
+            if (Math.abs(debitTotal - creditTotal) < 0.01) {
+                statusDiv.innerHTML = '<div class="label">状态</div><div class="balanced">✓ 借贷平衡</div>';
+            } else {
+                statusDiv.innerHTML = '<div class="label">状态</div><div class="unbalanced">✗ 借贷不平衡，差 ¥' + Math.abs(debitTotal - creditTotal).toFixed(2) + '</div>';
+            }
+        }
+
+        function validateForm() {
+            calculateBalance();
+            var rows = document.getElementById('itemsBody').rows;
+            var debitTotal = 0;
+            var creditTotal = 0;
+
+            for (var i = 0; i < rows.length; i++) {
+                var direction = rows[i].cells[2].querySelector('select').value;
+                var amount = parseFloat(rows[i].cells[3].querySelector('input').value) || 0;
+                var subjectId = rows[i].cells[1].querySelector('select').value;
+
+                if (!subjectId) {
+                    alert('请选择第 ' + (i + 1) + ' 行的科目');
+                    return false;
+                }
+                if (amount <= 0) {
+                    alert('请输入第 ' + (i + 1) + ' 行的金额');
+                    return false;
+                }
+
+                if (direction === '1') {
+                    debitTotal += amount;
+                } else {
+                    creditTotal += amount;
+                }
+            }
+
+            if (rows.length < 2) {
+                alert('凭证至少需要2条分录');
+                return false;
+            }
+
+            if (Math.abs(debitTotal - creditTotal) >= 0.01) {
+                alert('借贷不平衡！借方合计：' + debitTotal.toFixed(2) + '，贷方合计：' + creditTotal.toFixed(2));
+                return false;
+            }
+
+            return true;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            calculateBalance();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>日程详情</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div th:replace="fragment/sidebar :: sidebar"></div>
+    <div th:replace="fragment/common_styles :: styles"></div>
+
+    <div class="main-wrapper">
+        <header class="main-header">
+            <h2>日程管理</h2>
+            <div class="header-user">
+                <div class="user-avatar" th:text="${#strings.substring(session.loginUser?.realName, 0, 1)}">U</div>
+                <div>
+                    <div style="font-weight:500;font-size:14px;" th:text="${session.loginUser?.realName}">用户</div>
+                    <div style="font-size:12px;color:#6B7280;" th:text="${session.loginUser?.role == 'ADMIN' ? '管理员' : '普通用户'}">角色</div>
+                </div>
+            </div>
+        </header>
+        <main class="main-content">
+            <a th:href="@{/schedule/list}" class="back-link">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                返回列表
+            </a>
+
+            <div class="card animate-in">
+                <div class="card-header">
+                    <h3 th:text="${schedule.title}">日程标题</h3>
+                </div>
+                <div class="card-body">
+                    <div style="display:flex;align-items:center;margin-bottom:32px;">
+                        <div class="stat-icon" style="width:80px;height:80px;font-size:32px;margin:0 auto;background:linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);">
+                            <svg width="32" height="32" fill="none" stroke="#fff" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        </div>
+                        <div style="margin-left:20px;">
+                            <div style="font-size:24px;font-weight:600;color:#1F2937;" th:text="${schedule.title}">日程标题</div>
+                            <div style="font-size:14px;color:#6B7280;margin-top:4px;" th:text="${schedule.userName}">创建人</div>
+                        </div>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:24px;">
+                        <div class="info-item">
+                            <div class="info-label">日程标题</div>
+                            <div class="info-value" th:text="${schedule.title}">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">创建人</div>
+                            <div class="info-value" th:text="${schedule.userName}">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">开始时间</div>
+                            <div class="info-value" th:text="${#dates.format(schedule.startTime, 'yyyy-MM-dd HH:mm')}">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">结束时间</div>
+                            <div class="info-value" th:text="${#dates.format(schedule.endTime, 'yyyy-MM-dd HH:mm')}">-</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:24px;">
+                        <div class="info-label">日程内容</div>
+                        <div style="margin-top:8px;padding:16px;background:#F9FAFB;border-radius:8px;line-height:1.8;color:#374151;white-space:pre-wrap;" th:text="${schedule.content ?: '无'}">-</div>
+                    </div>
+
+                    <div style="margin-top:24px;">
+                        <div class="info-label">创建时间</div>
+                        <div class="info-value" th:text="${#dates.format(schedule.createTime, 'yyyy-MM-dd HH:mm')}">-</div>
+                    </div>
+
+                    <div style="margin-top:32px;">
+                        <a th:href="@{/schedule/list}" class="btn btn-secondary">返回</a>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

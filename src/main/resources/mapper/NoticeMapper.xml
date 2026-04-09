@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.oa.mapper.NoticeMapper">
+    <select id="selectAll" resultType="Notice">
+        SELECT n.*, u.real_name as author_name
+        FROM notice n
+        LEFT JOIN sys_user u ON n.author_id = u.id
+        ORDER BY n.create_time DESC
+    </select>
+
+    <select id="selectList" resultType="Notice">
+        SELECT n.*, u.real_name as author_name
+        FROM notice n
+        LEFT JOIN sys_user u ON n.author_id = u.id
+        ORDER BY n.create_time DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="int">
+        SELECT COUNT(*) FROM notice
+    </select>
+
+    <select id="selectById" resultType="Notice">
+        SELECT n.*, u.real_name as author_name
+        FROM notice n
+        LEFT JOIN sys_user u ON n.author_id = u.id
+        WHERE n.id = #{id}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO notice (title, content, author_id) VALUES (#{title}, #{content}, #{authorId})
+    </insert>
+
+    <update id="update">
+        UPDATE notice SET title = #{title}, content = #{content} WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM notice WHERE id = #{id}
+    </delete>
+</mapper>

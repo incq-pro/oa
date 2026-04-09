@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>部门编辑</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div th:replace="fragment/sidebar :: sidebar"></div>
+    <div th:replace="fragment/common_styles :: styles"></div>
+
+    <div class="main-wrapper">
+        <header class="main-header">
+            <h2>部门管理</h2>
+            <div class="header-user">
+                <div class="user-avatar" th:text="${#strings.substring(session.loginUser?.realName, 0, 1)}">U</div>
+                <div>
+                    <div style="font-weight:500;font-size:14px;" th:text="${session.loginUser?.realName}">用户</div>
+                    <div style="font-size:12px;color:#6B7280;" th:text="${session.loginUser?.role == 'ADMIN' ? '管理员' : '普通用户'}">角色</div>
+                </div>
+            </div>
+        </header>
+        <main class="main-content">
+            <a th:href="@{/dept/list}" class="back-link">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                返回列表
+            </a>
+
+            <div class="card animate-in">
+                <div class="card-header">
+                    <h3 th:text="${dept.id == null ? '新增部门' : '编辑部门'}">部门编辑</h3>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/dept/save}" method="post">
+                        <input type="hidden" name="id" th:value="${dept.id}">
+                        <div style="max-width:400px;">
+                            <div class="form-group">
+                                <label class="form-label">部门名称</label>
+                                <input type="text" name="name" class="form-control" th:value="${dept.name}" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">上级部门ID</label>
+                                <input type="number" name="parentId" class="form-control" th:value="${dept.parentId}">
+                            </div>
+                        </div>
+                        <div style="margin-top:24px;display:flex;gap:12px;">
+                            <button type="submit" class="btn btn-primary">保存</button>
+                            <a th:href="@{/dept/list}" class="btn btn-secondary">取消</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

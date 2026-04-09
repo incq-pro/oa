@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>会计凭证管理</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style th:replace="fragment/detail_modal :: modal_styles"></style>
+</head>
+<body>
+    <div th:replace="fragment/sidebar :: sidebar"></div>
+    <div th:replace="fragment/common_styles :: styles"></div>
+
+    <div class="main-wrapper">
+        <header class="main-header">
+            <h2>会计凭证管理</h2>
+            <div class="header-user">
+                <div class="user-avatar" th:text="${#strings.substring(session.loginUser?.realName ?: '未登录', 0, 1)}">U</div>
+                <div>
+                    <div style="font-weight:500;font-size:14px;" th:text="${session.loginUser?.realName ?: '未登录'}">用户</div>
+                    <div style="font-size:12px;color:#6B7280;" th:text="${session.loginUser?.role == 'ADMIN' ? '管理员' : '普通用户'}">角色</div>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="stat-grid">
+                <div class="stat-card animate-in">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%);">
+                        <svg fill="none" stroke="#4F46E5" viewBox="0 0 24 24" width="24" height="24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    </div>
+                    <div class="stat-num" th:text="${total}">0</div>
+                    <div class="stat-label">凭证总数</div>
+                </div>
+                <div class="stat-card animate-in">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);">
+                        <svg fill="none" stroke="#D97706" viewBox="0 0 24 24" width="24" height="24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <div class="stat-num" th:text="${pendingCount}">0</div>
+                    <div class="stat-label">待审核</div>
+                </div>
+                <div class="stat-card animate-in">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);">
+                        <svg fill="none" stroke="#059669" viewBox="0 0 24 24" width="24" height="24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <div class="stat-num" th:text="${postedCount}">0</div>
+                    <div class="stat-label">已过账</div>
+                </div>
+                <div class="stat-card animate-in">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%);">
+                        <svg fill="none" stroke="#2563EB" viewBox="0 0 24 24" width="24" height="24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    </div>
+                    <div class="stat-num" th:text="${totalAmount}">¥0</div>
+                    <div class="stat-label">凭证总金额</div>
+                </div>
+            </div>
+
+            <div class="card animate-in">
+                <div class="card-header">
+                    <h3>凭证列表</h3>
+                    <a th:href="@{/voucher/add}" class="btn btn-primary">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        新增凭证
+                    </a>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="filter-bar" style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:24px;padding:20px;background:#F9FAFB;border-radius:12px;">
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <label style="font-size:14px;color:#6B7280;">凭证号:</label>
+                            <input type="text" name="voucherNo" th:value="${voucherNo}" class="form-control" style="width:150px;" placeholder="输入凭证号">
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <label style="font-size:14px;color:#6B7280;">日期:</label>
+                            <input type="date" name="startDate" th:value="${startDate}" class="form-control" style="width:150px;">
+                            <span style="color:#6B7280;">至</span>
+                            <input type="date" name="endDate" th:value="${endDate}" class="form-control" style="width:150px;">
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <label style="font-size:14px;color:#6B7280;">审核状态:</label>
+                            <select name="auditStatus" class="form-control" style="width:120px;">
+                                <option value="">全部</option>
+                                <option value="0" th:selected="${auditStatus == '0'}">待审核</option>
+                                <option value="1" th:selected="${auditStatus == '1'}">已审核</option>
+                                <option value="2" th:selected="${auditStatus == '2'}">驳回</option>
+                            </select>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <label style="font-size:14px;color:#6B7280;">过账状态:</label>
+                            <select name="postingStatus" class="form-control" style="width:120px;">
+                                <option value="">全部</option>
+                                <option value="0" th:selected="${postingStatus == '0'}">未过账</option>
+                                <option value="1" th:selected="${postingStatus == '1'}">已过账</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="padding:10px 16px;">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            查询
+                        </button>
+                        <a th:href="@{/voucher/list}" class="btn btn-secondary" style="padding:10px 16px;">重置</a>
+                    </form>
+
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>凭证号</th>
+                                    <th>凭证日期</th>
+                                    <th>附件数</th>
+                                    <th>制单人</th>
+                                    <th>金额(元)</th>
+                                    <th>审核状态</th>
+                                    <th>过账状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="item : ${list}" class="table-row">
+                                    <td>
+                                        <a th:href="@{/voucher/edit/{id}(id=${item.id})}" style="color:#4F46E5;font-weight:500;" th:text="${item.voucherNo}">-</a>
+                                    </td>
+                                    <td th:text="${item.voucherDate}">-</td>
+                                    <td th:text="${item.attachmentCount}">-</td>
+                                    <td th:text="${item.makerName}">-</td>
+                                    <td style="font-weight:600;color:#059669;" th:text="'¥' + ${#numbers.formatDecimal(item.totalAmount, 1, 2)}">¥0.00</td>
+                                    <td>
+                                        <span th:if="${item.auditStatusName == '待审核'}" class="badge badge-warning">待审核</span>
+                                        <span th:if="${item.auditStatusName == '已审核'}" class="badge badge-success">已审核</span>
+                                        <span th:if="${item.auditStatusName == '驳回'}" class="badge badge-danger">驳回</span>
+                                    </td>
+                                    <td>
+                                        <span th:if="${item.postingStatusName == '未过账'}" class="badge badge-secondary" style="background:#E5E7EB;color:#6B7280;">未过账</span>
+                                        <span th:if="${item.postingStatusName == '已过账'}" class="badge badge-info">已过账</span>
+                                    </td>
+                                    <td class="actions">
+                                        <button class="btn btn-sm btn-info" th:attr="onclick=|openVoucherDetail(${item.id}, '${item.voucherNo}', '${item.voucherDate}', '${item.totalAmount}', '${item.auditStatus}', '${item.postingStatus}', '${item.remark ?: ''}', '${item.makerName ?: ''}')|">查看</button>
+                                        <span th:if="${item.auditStatusName == '待审核' && item.postingStatusName == '未过账'}">
+                                            <a th:href="@{/voucher/audit/{id}/1(id=${item.id})}" class="btn btn-sm btn-success" onclick="return confirm('确定审核通过?')">审核</a>
+                                            <a th:href="@{/voucher/delete/{id}(id=${item.id})}" class="btn btn-sm btn-danger" onclick="return confirm('确定删除?')">删除</a>
+                                        </span>
+                                        <span th:if="${item.auditStatusName == '已审核' && item.postingStatusName == '未过账'}">
+                                            <a th:href="@{/voucher/post/{id}(id=${item.id})}" class="btn btn-sm btn-primary" onclick="return confirm('确定过账?')">过账</a>
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(list)}">
+                                    <td colspan="8" class="empty-state">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                        <p>暂无凭证数据</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="pagination-info" th:if="${totalPages > 1}">
+                        <div style="font-size:14px;color:#6B7280;">
+                            共 <span th:text="${total}">0</span> 条记录，第 <span th:text="${page}">1</span>/<span th:text="${totalPages}">1</span> 页
+                        </div>
+                        <div class="pagination" style="margin-top:0;padding-top:0;border-top:none;">
+                            <a th:if="${page > 1}" th:href="@{/voucher/list(page=${page - 1},voucherNo=${voucherNo},startDate=${startDate},endDate=${endDate},auditStatus=${auditStatus},postingStatus=${postingStatus})}" class="btn btn-sm btn-secondary">上一页</a>
+                            <span th:if="${page <= 1}" class="btn btn-sm btn-secondary disabled">上一页</span>
+                            <a th:if="${page < totalPages}" th:href="@{/voucher/list(page=${page + 1},voucherNo=${voucherNo},startDate=${startDate},endDate=${endDate},auditStatus=${auditStatus},postingStatus=${postingStatus})}" class="btn btn-sm btn-secondary">下一页</a>
+                            <span th:if="${page >= totalPages}" class="btn btn-sm btn-secondary disabled">下一页</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+<script th:replace="fragment/detail_modal :: modal_script"></script>
+<script>
+function openVoucherDetail(id, voucherNo, voucherDate, totalAmount, auditStatus, postingStatus, remark, makerName) {
+    var auditMap = {'0': '<span class="status-badge pending">待审核</span>', '1': '<span class="status-badge approved">已审核</span>', '2': '<span class="status-badge rejected">已驳回</span>'};
+    var postingMap = {'0': '<span class="status-badge pending">待过账</span>', '1': '<span class="status-badge posted">已过账</span>'};
+    var content = `
+        <div class="info-grid">
+            <div class="info-item"><div class="info-label">凭证号</div><div class="info-value">${voucherNo}</div></div>
+            <div class="info-item"><div class="info-label">凭证日期</div><div class="info-value">${voucherDate}</div></div>
+            <div class="info-item"><div class="info-label">总金额</div><div class="info-value highlight" style="color:#059669;">¥${totalAmount || '0.00'}</div></div>
+            <div class="info-item"><div class="info-label">审核状态</div><div class="info-value">${auditMap[auditStatus] || auditStatus}</div></div>
+            <div class="info-item"><div class="info-label">过账状态</div><div class="info-value">${postingMap[postingStatus] || postingStatus}</div></div>
+            <div class="info-item"><div class="info-label">制单人</div><div class="info-value">${makerName || '-'}</div></div>
+            <div class="info-item full-width"><div class="info-label">备注</div><div class="info-value">${remark || '-'}</div></div>
+        </div>
+    `;
+    openDetailModal('凭证详情', content);
+}
+</script>
+<div th:replace="fragment/detail_modal :: detail_modal"></div>
+</body>
+</html>

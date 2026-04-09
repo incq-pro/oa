@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.oa.mapper.ApprovalMapper">
+    <select id="selectAll" resultType="Approval">
+        SELECT a.*, t.name as type_name, u.real_name as user_name,
+            CASE a.status
+                WHEN 0 THEN '待审批'
+                WHEN 1 THEN '已通过'
+                WHEN 2 THEN '已拒绝'
+                ELSE '未知'
+            END as status_name
+        FROM approval a
+        LEFT JOIN approval_type t ON a.type_id = t.id
+        LEFT JOIN sys_user u ON a.user_id = u.id
+        ORDER BY a.create_time DESC
+    </select>
+
+    <select id="selectByUserId" resultType="Approval">
+        SELECT a.*, t.name as type_name, u.real_name as user_name,
+            CASE a.status
+                WHEN 0 THEN '待审批'
+                WHEN 1 THEN '已通过'
+                WHEN 2 THEN '已拒绝'
+                ELSE '未知'
+            END as status_name
+        FROM approval a
+        LEFT JOIN approval_type t ON a.type_id = t.id
+        LEFT JOIN sys_user u ON a.user_id = u.id
+        WHERE a.user_id = #{userId}
+        ORDER BY a.create_time DESC
+    </select>
+
+    <select id="selectById" resultType="Approval">
+        SELECT a.*, t.name as type_name, u.real_name as user_name
+        FROM approval a
+        LEFT JOIN approval_type t ON a.type_id = t.id
+        LEFT JOIN sys_user u ON a.user_id = u.id
+        WHERE a.id = #{id}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO approval (type_id, user_id, title, content, status)
+        VALUES (#{typeId}, #{userId}, #{title}, #{content}, #{status})
+    </insert>
+
+    <update id="update">
+        UPDATE approval SET type_id = #{typeId}, title = #{title}, content = #{content}, status = #{status} WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM approval WHERE id = #{id}
+    </delete>
+</mapper>

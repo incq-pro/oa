@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>日程编辑</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div th:replace="fragment/sidebar :: sidebar"></div>
+    <div th:replace="fragment/common_styles :: styles"></div>
+
+    <div class="main-wrapper">
+        <header class="main-header">
+            <h2>日程管理</h2>
+            <div class="header-user">
+                <div class="user-avatar" th:text="${#strings.substring(session.loginUser?.realName, 0, 1)}">U</div>
+                <div>
+                    <div style="font-weight:500;font-size:14px;" th:text="${session.loginUser?.realName}">用户</div>
+                    <div style="font-size:12px;color:#6B7280;" th:text="${session.loginUser?.role == 'ADMIN' ? '管理员' : '普通用户'}">角色</div>
+                </div>
+            </div>
+        </header>
+        <main class="main-content">
+            <a th:href="@{/schedule/list}" class="back-link">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                返回列表
+            </a>
+
+            <div class="card animate-in">
+                <div class="card-header">
+                    <h3 th:text="${schedule.id == null ? '新增日程' : '编辑日程'}">日程编辑</h3>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/schedule/save}" method="post">
+                        <input type="hidden" name="id" th:value="${schedule.id}">
+                        <div style="max-width:500px;">
+                            <div class="form-group">
+                                <label class="form-label">标题</label>
+                                <input type="text" name="title" class="form-control" th:value="${schedule.title}" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">内容</label>
+                                <textarea name="content" class="form-control" rows="3" th:text="${schedule.content}"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">开始时间</label>
+                                <input type="datetime-local" name="startTime" class="form-control"
+                                       th:value="${schedule.startTime != null ? #dates.format(schedule.startTime, 'yyyy-MM-dd''T''HH:mm') : ''}" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">结束时间</label>
+                                <input type="datetime-local" name="endTime" class="form-control"
+                                       th:value="${schedule.endTime != null ? #dates.format(schedule.endTime, 'yyyy-MM-dd''T''HH:mm') : ''}" required>
+                            </div>
+                        </div>
+                        <div style="margin-top:24px;display:flex;gap:12px;">
+                            <button type="submit" class="btn btn-primary">保存</button>
+                            <a th:href="@{/schedule/list}" class="btn btn-secondary">取消</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

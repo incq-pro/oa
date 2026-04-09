@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.oa.mapper.VoucherItemMapper">
+    <select id="selectByVoucherId" resultType="VoucherItem">
+        SELECT vi.*, s.subject_code as subjectCode, s.subject_name as subjectName,
+               CASE vi.direction WHEN '1' THEN '借' WHEN '2' THEN '贷' END as directionName
+        FROM voucher_item vi
+        LEFT JOIN account_subject s ON vi.subject_id = s.id
+        WHERE vi.voucher_id = #{voucherId}
+        ORDER BY vi.seq
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO voucher_item (voucher_id, subject_id, direction, amount, summary, seq)
+        VALUES (#{voucherId}, #{subjectId}, #{direction}, #{amount}, #{summary}, #{seq})
+    </insert>
+
+    <delete id="deleteByVoucherId">
+        DELETE FROM voucher_item WHERE voucher_id = #{voucherId}
+    </delete>
+</mapper>

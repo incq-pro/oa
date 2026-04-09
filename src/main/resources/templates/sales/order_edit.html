@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>新建订单</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div th:replace="fragment/sidebar :: sidebar"></div>
+    <div th:replace="fragment/common_styles :: styles"></div>
+
+    <div class="main-wrapper">
+        <header class="main-header">
+            <h2>新建订单</h2>
+            <div class="header-user">
+                <div class="user-avatar" th:text="${#strings.substring(session.loginUser?.realName, 0, 1)}">U</div>
+            </div>
+        </header>
+        <main class="main-content">
+            <a th:href="@{/sales/list}" class="back-link">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                返回列表
+            </a>
+
+            <div class="card animate-in">
+                <div class="card-header">
+                    <h3>新建订单</h3>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/sales/save}" method="post" id="orderForm">
+                        <input type="hidden" name="itemsJson" id="itemsJson">
+
+                        <div class="form-group">
+                            <label class="form-label">选择客户</label>
+                            <select name="customerId" class="form-control" required style="max-width:400px;">
+                                <option value="">请选择客户</option>
+                                <option th:each="c : ${customers}" th:value="${c.id}" th:text="${c.name}"></option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">选择产品</label>
+                            <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                                <div th:each="p : ${products}" style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#F3F4F6;border-radius:8px;">
+                                    <input type="checkbox" th:id="${'prod-' + p.id}" th:value="${p.id}" onchange="updateItems()">
+                                    <label th:for="${'prod-' + p.id}" th:text="${p.name + ' ¥' + p.price}"></label>
+                                    <input type="number" th:id="${'qty-' + p.id}" min="1" value="1" placeholder="数量" style="width:60px;padding:4px 8px;border:1px solid #D1D5DB;border-radius:4px;" onchange="updateItems()">
+                                    <input type="hidden" th:id="${'price-' + p.id}" th:value="${p.price}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top:24px;">
+                            <h4 style="margin-bottom:12px;">已选产品：</h4>
+                            <div id="selectedItems" style="color:#6B7280;">请选择产品</div>
+                        </div>
+
+                        <div style="margin-top:24px;display:flex;gap:12px;">
+                            <button type="submit" class="btn btn-primary">提交订单</button>
+                            <a th:href="@{/sales/list}" class="btn btn-secondary">取消</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function updateItems() {
+            var items = [];
+            var selectedDiv = document.getElementById('selectedItems');
+            var divs = document.querySelectorAll('[id^="prod-"]');
+            var hasSelected = false;
+
+            divs.forEach(function(cb) {
+                if (cb.checked) {
+                    var id = cb.value;
+                    var price = document.getElementById('price-' + id).value;
+                    var qty = document.getElementById('qty-' + id).value;
+                    items.push(id + ',' + price + ',' + qty);
+                    hasSelected = true;
+                }
+            });
+
+            document.getElementById('itemsJson').value = items.join(';');
+            selectedDiv.innerHTML = hasSelected ? items.map(function(item) {
+                var parts = item.split(',');
+                return '产品' + parts[0] + ' x ' + parts[2] + ' = ¥' + (parts[1] * parts[2]).toFixed(2);
+            }).join('<br>') : '请选择产品';
+        }
+    </script>
+</body>
+</html>

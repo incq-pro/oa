@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>考勤管理</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style th:replace="fragment/detail_modal :: modal_styles"></style>
+</head>
+<body>
+    <div th:replace="fragment/sidebar :: sidebar"></div>
+    <div th:replace="fragment/common_styles :: styles"></div>
+
+    <div class="main-wrapper">
+        <header class="main-header">
+            <h2>考勤管理</h2>
+            <div class="header-user">
+                <div class="user-avatar" th:text="${#strings.substring(session.loginUser?.realName, 0, 1)}">U</div>
+                <div>
+                    <div style="font-weight:500;font-size:14px;" th:text="${session.loginUser?.realName}">用户</div>
+                    <div style="font-size:12px;color:#6B7280;" th:text="${session.loginUser?.role == 'ADMIN' ? '管理员' : '普通用户'}">角色</div>
+                </div>
+            </div>
+        </header>
+        <main class="main-content">
+            <div class="stat-grid animate-in" style="margin-bottom:24px;">
+                <div class="stat-card" style="cursor:pointer;" onclick="location.href='/attendance/checkin'">
+                    <div style="text-align:center;">
+                        <div class="stat-icon" style="background:linear-gradient(135deg, #10B981 0%, #059669 100%);">
+                            <svg width="24" height="24" fill="none" stroke="#fff" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        </div>
+                        <div style="font-size:16px;font-weight:600;color:#1F2937;">签到</div>
+                        <div style="font-size:13px;color:#6B7280;margin-top:4px;">点击签到</div>
+                    </div>
+                </div>
+                <div class="stat-card" style="cursor:pointer;" onclick="location.href='/attendance/checkout'">
+                    <div style="text-align:center;">
+                        <div class="stat-icon" style="background:linear-gradient(135deg, #F59E0B 0%, #D97706 100%);">
+                            <svg width="24" height="24" fill="none" stroke="#fff" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                        </div>
+                        <div style="font-size:16px;font-weight:600;color:#1F2937;">签退</div>
+                        <div style="font-size:13px;color:#6B7280;margin-top:4px;">点击签退</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card animate-in" style="animation-delay:0.1s;">
+                <div class="card-header">
+                    <h3>考勤记录</h3>
+                </div>
+                <div class="card-body" style="padding:0;">
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>用户</th>
+                                    <th>类型</th>
+                                    <th>时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="att : ${attendances}" class="table-row">
+                                    <td th:text="${att.id}">-</td>
+                                    <td th:text="${att.userName}">-</td>
+                                    <td>
+                                        <span class="badge badge-success" th:if="${att.type == 1}">正常</span>
+                                        <span class="badge badge-warning" th:if="${att.type == 2}">迟到</span>
+                                        <span class="badge badge-danger" th:if="${att.type == 3}">早退</span>
+                                        <span class="badge badge-info" th:if="${att.type == 4}">请假</span>
+                                    </td>
+                                    <td th:text="${#dates.format(att.createTime, 'yyyy-MM-dd HH:mm:ss')}">-</td>
+                                    <td class="actions">
+                                        <button class="btn btn-sm btn-info" th:attr="onclick=|openAttendanceDetail(${att.id}, '${att.userName ?: ''}', '${#dates.format(att.createTime, 'yyyy-MM-dd HH:mm:ss')}', '${att.typeName ?: ''}')|">查看</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination-wrapper" th:if="${totalCount > pageSize}">
+                        <div class="pagination-info">共 <span th:text="${totalCount}">0</span> 条记录，第 <span th:text="${currentPage}">1</span>/<span th:text="${(totalCount + pageSize - 1) / pageSize}">1</span> 页</div>
+                        <div class="pagination">
+                            <a th:if="${currentPage > 1}" th:href="@{/attendance/list(page=${currentPage - 1}, size=${pageSize})}" class="page-btn">上一页</a>
+                            <span th:if="${currentPage <= 1}" class="page-btn disabled">上一页</span>
+                            <a th:if="${currentPage < (totalCount + pageSize - 1) / pageSize}" th:href="@{/attendance/list(page=${currentPage + 1}, size=${pageSize})}" class="page-btn">下一页</a>
+                            <span th:if="${currentPage >= (totalCount + pageSize - 1) / pageSize}" class="page-btn disabled">下一页</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+<script th:replace="fragment/detail_modal :: modal_script"></script>
+<script>
+function openAttendanceDetail(id, userName, createTime, typeName) {
+    var content = `
+        <div class="info-grid">
+            <div class="info-item"><div class="info-label">员工姓名</div><div class="info-value">${userName || '-'}</div></div>
+            <div class="info-item"><div class="info-label">考勤时间</div><div class="info-value highlight">${createTime || '-'}</div></div>
+            <div class="info-item full-width"><div class="info-label">考勤类型</div><div class="info-value">${typeName || '-'}</div></div>
+        </div>
+    `;
+    openDetailModal('考勤详情', content);
+}
+</script>
+<div th:replace="fragment/detail_modal :: detail_modal"></div>
+</body>
+</html>
