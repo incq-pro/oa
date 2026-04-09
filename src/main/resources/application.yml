@@ -1,5 +1,11 @@
 server:
   port: 8080
+  tomcat:
+    threads:
+      max: 10
+      min-spare: 2
+    accept-count: 5
+    max-connections: 20
 
 spring:
   application:
@@ -13,6 +19,12 @@ spring:
   datasource:
     driver-class-name: org.sqlite.JDBC
     url: jdbc:sqlite:./oa.db
+    hikari:
+      maximum-pool-size: 2
+      minimum-idle: 1
+      connection-timeout: 5000
+      idle-timeout: 600000
+      max-lifetime: 1800000
   sql:
     init:
       mode: always
@@ -24,4 +36,3 @@ mybatis:
   type-aliases-package: com.oa.entity
   configuration:
     map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
