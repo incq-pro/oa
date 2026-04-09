@@ -10,8 +10,10 @@ PID_FILE="$APP_DIR/app.pid"
 INIT_DB="always"
 
 build() {
-    echo "正在构建项目..."
     cd "$APP_DIR"
+    COMMIT_ID=$(git rev-parse --short HEAD 2>/dev/null)
+    echo "当前 commit: $COMMIT_ID"
+    echo "正在构建项目..."
     mvn clean package -DskipTests -q
     if [ $? -eq 0 ]; then
         echo "构建成功: $JAR_FILE"
