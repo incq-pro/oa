@@ -51,7 +51,7 @@
                                     <td th:text="${dept.parentId == 0 ? '无' : dept.parentId}">-</td>
                                     <td th:text="${#dates.format(dept.createTime, 'yyyy-MM-dd HH:mm')}">-</td>
                                     <td class="actions">
-                                        <button class="btn btn-sm btn-info" th:attr="onclick=|openDeptDetail(${dept.id}, '${dept.name}', '${dept.leaderName ?: ''}', '${dept.phone ?: ''}', '${dept.description ?: ''}')|">查看</button>
+                                        <button class="btn btn-sm btn-info" th:attr="onclick=|openDeptDetail(${dept.id}, '${dept.name}')|">查看</button>
                                         <a th:href="@{/dept/edit/{id}(id=${dept.id})}" class="btn btn-sm btn-warning">编辑</a>
                                         <a th:href="@{/dept/delete/{id}(id=${dept.id})}" class="btn btn-sm btn-danger" onclick="return confirm('确定删除?')">删除</a>
                                     </td>
@@ -65,13 +65,11 @@
     </div>
 <script th:replace="fragment/detail_modal :: modal_script"></script>
 <script>
-function openDeptDetail(id, name, leaderName, phone, description) {
+function openDeptDetail(id, name) {
     var content = `
         <div class="info-grid">
             <div class="info-item"><div class="info-label">部门名称</div><div class="info-value highlight">${name}</div></div>
-            <div class="info-item"><div class="info-label">负责人</div><div class="info-value">${leaderName || '-'}</div></div>
-            <div class="info-item"><div class="info-label">联系电话</div><div class="info-value">${phone || '-'}</div></div>
-            <div class="info-item full-width"><div class="info-label">描述</div><div class="info-value">${description || '-'}</div></div>
+            <div class="info-item"><div class="info-label">上级部门</div><div class="info-value">${id === 0 ? '无' : id}</div></div>
         </div>
     `;
     openDetailModal('部门详情', content);
